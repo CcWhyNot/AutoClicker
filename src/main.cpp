@@ -36,7 +36,20 @@ int main(int argc, char *argv[])
     ImGui::CreateContext();
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init("#version 330");
+
     ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding    = 0.0f;
+    style.FrameRounding     = 4.0f;
+    style.ItemSpacing       = ImVec2(10, 10);
+    style.FramePadding      = ImVec2(8, 5);
+    style.WindowPadding     = ImVec2(16, 16);
+    style.Colors[ImGuiCol_WindowBg]    = ImVec4(0.10f, 0.10f, 0.12f, 1.0f);
+    style.Colors[ImGuiCol_FrameBg]     = ImVec4(0.18f, 0.18f, 0.22f, 1.0f);
+    style.Colors[ImGuiCol_Button]      = ImVec4(0.25f, 0.45f, 0.80f, 1.0f);
+    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.35f, 0.55f, 0.95f, 1.0f);
+    style.Colors[ImGuiCol_CheckMark]   = ImVec4(0.35f, 0.55f, 0.95f, 1.0f);
+    style.Colors[ImGuiCol_SliderGrab]  = ImVec4(0.35f, 0.55f, 0.95f, 1.0f);
 
     AutoclickerConfig config;
 
@@ -70,7 +83,7 @@ int main(int argc, char *argv[])
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ui_render(config);
+        ui_render(config, window);
 
         ImGui::Render();
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
