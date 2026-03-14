@@ -47,9 +47,21 @@ void ui_render(AutoclickerConfig& config, SDL_Window* window) {
     int  delay_ms = config.delay_ms.load();
     int  tipo     = config.tipo.load();
 
-    // --- título ---
+    // --- título + créditos ---
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 4);
     ImGui::TextColored(ImVec4(0.35f, 0.55f, 0.95f, 1.0f), "AutoClicker");
+    ImGui::SameLine();
+    ImGui::TextDisabled("by CcWhyNot");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("github.com/CcWhyNot");
+
+    // --- indicador de estado (derecha) ---
+    const char* estado_txt = activo ? "ACTIVO" : "INACTIVO";
+    ImVec4      estado_col = activo ? ImVec4(0.2f,0.8f,0.3f,1.0f) : ImVec4(0.5f,0.5f,0.5f,1.0f);
+    float txt_w = ImGui::CalcTextSize(estado_txt).x;
+    ImGui::SameLine((float)w - txt_w - 16);
+    ImGui::TextColored(estado_col, "%s", estado_txt);
+
     ImGui::Separator();
     ImGui::Spacing();
 
