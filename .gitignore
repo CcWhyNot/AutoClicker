@@ -39,3 +39,13 @@
 
 # debug information files
 *.dwo
+
+# IA
+/.claude
+/context
+
+# cache
+.cache
+
+# build folder
+/build
