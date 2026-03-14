@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "imgui.h"
+#include <SDL.h>
 #include <algorithm>
 #include <mutex>
 #include <string>
@@ -83,8 +84,13 @@ void ui_render(AutoclickerConfig& config, SDL_Window* window) {
         ImGui::SetTooltip("github.com/CcWhyNot");
 
     // --- indicador de estado (derecha) ---
-    const char* estado_txt = activo ? "ACTIVO" : "INACTIVO";
-    ImVec4      estado_col = activo ? ImVec4(0.2f,0.8f,0.3f,1.0f) : ImVec4(0.5f,0.5f,0.5f,1.0f);
+    bool        prog_on    = config.programado.load();
+    const char* estado_txt = prog_on  ? "PROGRAMADO"
+                           : activo   ? "ACTIVO"
+                                      : "INACTIVO";
+    ImVec4      estado_col = prog_on  ? ImVec4(0.9f, 0.6f, 0.1f, 1.0f)
+                           : activo   ? ImVec4(0.2f, 0.8f, 0.3f, 1.0f)
+                                      : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
     float txt_w = ImGui::CalcTextSize(estado_txt).x;
     ImGui::SameLine((float)w - txt_w - 16);
     ImGui::TextColored(estado_col, "%s", estado_txt);
@@ -203,8 +209,85 @@ void ui_render(AutoclickerConfig& config, SDL_Window* window) {
     ImGui::Separator();
     ImGui::Spacing();
 
+    // --- modo programado ---
+    {
+        static int unidad = 0; // 0=segundos, 1=minutos
+
+        bool prog = config.programado.load();
+        if (activo) ImGui::BeginDisabled();
+        if (ImGui::Checkbox("Modo programado", &prog)) {
+            if (prog) {
+                config.activo.store(false);    // apagar manual al activar programado
+                config.prox_run_tick.store(0);
+            }
+            config.programado.store(prog);
+        }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            ImGui::SetTooltip("Ejecuta el patrón de posiciones automáticamente\ncada X segundos/minutos.");
+        if (activo) ImGui::EndDisabled();
+
+        if (prog) {
+            ImGui::Indent(12.0f);
+            ImGui::Spacing();
+
+            // intervalo
+            int intervalo_raw = config.intervalo_seg.load();
+            int intervalo_ui  = (unidad == 1) ? intervalo_raw / 60 : intervalo_raw;
+
+            ImGui::Text("Cada");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(70);
+            if (ImGui::InputInt("##intervalo", &intervalo_ui)) {
+                intervalo_ui = std::clamp(intervalo_ui, 1, (unidad == 1) ? 60 : 3600);
+                config.intervalo_seg.store((unidad == 1) ? intervalo_ui * 60 : intervalo_ui);
+                config.prox_run_tick.store(0); // reiniciar timer al cambiar intervalo
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(90);
+            const char* unidades[] = {"segundos", "minutos"};
+            if (ImGui::Combo("##unidad", &unidad, unidades, 2)) {
+                // al cambiar unidad ajustar el valor mostrado (el almacenado no cambia)
+            }
+
+            // pases
+            int pases = config.num_pases.load();
+            ImGui::Text("Pases");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(70);
+            if (ImGui::InputInt("##pases", &pases)) {
+                pases = std::clamp(pases, 1, 100);
+                config.num_pases.store(pases);
+            }
+
+            // countdown
+            ImGui::Spacing();
+            uint32_t prox  = config.prox_run_tick.load();
+            uint32_t ahora = (uint32_t)SDL_GetTicks();
+            if (prox == 0) {
+                ImGui::TextDisabled("Esperando primer tick...");
+            } else if (prox > ahora) {
+                uint32_t ms = prox - ahora;
+                if (ms >= 1000)
+                    ImGui::TextColored(ImVec4(0.5f, 0.85f, 1.0f, 1.0f),
+                        "Proxima ejecucion en: %us", ms / 1000u);
+                else
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Ejecutando pronto...");
+            } else {
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Ejecutando...");
+            }
+
+            ImGui::Unindent(12.0f);
+        }
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
     // --- activar ---
     float btn_w = (float)w - 32;
+    bool prog_activo = config.programado.load();
+    if (prog_activo) ImGui::BeginDisabled();
     if (activo) {
         ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.15f, 0.55f, 0.20f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.65f, 0.25f, 1.0f));
@@ -226,6 +309,7 @@ void ui_render(AutoclickerConfig& config, SDL_Window* window) {
         config.activo.store(nuevo);
     }
     ImGui::PopStyleColor(2);
+    if (prog_activo) ImGui::EndDisabled();
 
     ImGui::End();
 }

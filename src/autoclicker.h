@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <vector>
 #include <Windows.h>
@@ -25,6 +26,12 @@ struct AutoclickerConfig {
     std::atomic<int>  pos_index        = 0;
     std::vector<POINT> posiciones;
     std::mutex         posiciones_mutex;
+
+    // modo programado
+    std::atomic<bool>     programado      = false;
+    std::atomic<int>      intervalo_seg   = 10;   // 1-3600
+    std::atomic<int>      num_pases       = 1;    // 1-100
+    std::atomic<uint32_t> prox_run_tick   = 0;    // 0 = pendiente de inicializar
 };
 
 void autoclicker_tick(AutoclickerConfig& config);
