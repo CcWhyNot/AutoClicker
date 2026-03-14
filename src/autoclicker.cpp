@@ -28,6 +28,6 @@ void autoclicker_tick(AutoclickerConfig &config)
 
 void autoclicker_hotkey(AutoclickerConfig &config)
 {
-    if (GetAsyncKeyState(VK_F1) & 0x0001)
+    if (GetAsyncKeyState(config.hotkey.load()) & 0x0001)
         config.activo = !config.activo.load();
 }
