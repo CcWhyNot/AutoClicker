@@ -92,8 +92,81 @@ void ui_render(AutoclickerConfig& config, SDL_Window* window) {
                            : activo   ? ImVec4(0.2f, 0.8f, 0.3f, 1.0f)
                                       : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
     float txt_w = ImGui::CalcTextSize(estado_txt).x;
+
+    // botón "?" antes del indicador
+    ImGui::SameLine((float)w - txt_w - 16 - 30);
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0,0,0,0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1,1,1,0.08f));
+    if (ImGui::SmallButton("?"))
+        ImGui::OpenPopup("##acerca");
+    ImGui::PopStyleColor(2);
+
     ImGui::SameLine((float)w - txt_w - 16);
     ImGui::TextColored(estado_col, "%s", estado_txt);
+
+    // --- modal Acerca de ---
+    ImGui::SetNextWindowSize(ImVec2(420, 340), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2((float)w / 2, (float)h / 2),
+        ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("##acerca", nullptr,
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+
+        ImGui::TextColored(ImVec4(0.35f, 0.55f, 0.95f, 1.0f), "AutoClicker");
+        ImGui::SameLine();
+        ImGui::TextDisabled("by CcWhyNot");
+        ImGui::SameLine();
+        ImGui::TextDisabled("— github.com/CcWhyNot");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::BeginChild("##licenses", ImVec2(0, -36), true);
+
+        ImGui::TextColored(ImVec4(0.7f, 0.85f, 1.0f, 1.0f), "SDL2 (zlib license)");
+        ImGui::TextWrapped(
+            "Copyright (C) 1997-2024 Sam Lantinga <slouken@libsdl.org>\n\n"
+            "This software is provided 'as-is', without any express or implied warranty. "
+            "In no event will the authors be held liable for any damages arising from the "
+            "use of this software.\n\n"
+            "Permission is granted to anyone to use this software for any purpose, including "
+            "commercial applications, and to alter it and redistribute it freely, subject to "
+            "the following restrictions:\n\n"
+            "1. The origin of this software must not be misrepresented; you must not claim "
+            "that you wrote the original software.\n"
+            "2. Altered source versions must be plainly marked as such, and must not be "
+            "misrepresented as being the original software.\n"
+            "3. This notice may not be removed or altered from any source distribution."
+        );
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::TextColored(ImVec4(0.7f, 0.85f, 1.0f, 1.0f), "Dear ImGui (MIT license)");
+        ImGui::TextWrapped(
+            "Copyright (c) 2014-2024 Omar Cornut\n\n"
+            "Permission is hereby granted, free of charge, to any person obtaining a copy "
+            "of this software and associated documentation files (the \"Software\"), to deal "
+            "in the Software without restriction, including without limitation the rights to "
+            "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies "
+            "of the Software, and to permit persons to whom the Software is furnished to do "
+            "so, subject to the following conditions:\n\n"
+            "The above copyright notice and this permission notice shall be included in all "
+            "copies or substantial portions of the Software.\n\n"
+            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
+            "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
+            "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT."
+        );
+
+        ImGui::EndChild();
+
+        ImGui::Spacing();
+        float close_w = 80;
+        ImGui::SetCursorPosX((420 - close_w) / 2);
+        if (ImGui::Button("Cerrar", ImVec2(close_w, 0)))
+            ImGui::CloseCurrentPopup();
+
+        ImGui::EndPopup();
+    }
 
     ImGui::Separator();
     ImGui::Spacing();

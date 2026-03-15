@@ -15,22 +15,19 @@ jobs:
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure CMake
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
 
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Package
-        run: |
-          mkdir dist
-          copy build\AutoClicker.exe dist\AutoClicker.exe
-          copy build\SDL2.dll dist\SDL2.dll
-
-      - name: Zip artifact
-        run: Compress-Archive -Path dist\* -DestinationPath AutoClicker-${{ github.ref_name }}-windows.zip
+      - name: Rename artifact
+        run: copy build\AutoClicker.exe AutoClicker-${{ github.ref_name }}.exe
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
-          files: AutoClicker-${{ github.ref_name }}-windows.zip
+          files: AutoClicker-${{ github.ref_name }}.exe

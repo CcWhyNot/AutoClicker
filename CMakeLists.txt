@@ -6,7 +6,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
-# SDL2
+# SDL2 — forzar build estático para .exe sin DLL
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON  CACHE BOOL "" FORCE)
+
 find_package(SDL2 QUIET)
 if (NOT SDL2_FOUND)
 	message(STATUS "SDL2 no encontrada. Descargando automáticamente...")
@@ -33,7 +36,6 @@ set(IMGUI_SOURCES
 	${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
-
 find_package(OpenGL REQUIRED)
 
 add_executable(AutoClicker WIN32
@@ -49,15 +51,13 @@ target_include_directories(AutoClicker PRIVATE
 	${SDL2_SOURCE_DIR}/include
 )
 
-
 target_link_libraries(AutoClicker PRIVATE
 	SDL2::SDL2main
-	SDL2::SDL2
+	SDL2::SDL2-static
 	OpenGL::GL
-)
-
-add_custom_command(TARGET AutoClicker POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-			$<TARGET_FILE:SDL2::SDL2>
-			$<TARGET_FILE_DIR:AutoClicker>
+	# dependencias de sistema que SDL2 estático necesita en Windows
+	winmm
+	imm32
+	version
+	setupapi
 )
